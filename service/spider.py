@@ -72,5 +72,4 @@ async def get_table(s, sid, ip, xnm, xqm):
                     kcList.append(_item_dict)
                 return(kcList)
             except json.decoder.JSONDecodeError as e:
-                print(e)
                 return None

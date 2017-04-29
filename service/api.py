@@ -8,7 +8,7 @@ api = web.Application()
 
 # 课程id对于每个用户不重复即可
 @require_info_login # 避免伪造查询请求
-async def get_table_api(request, s, sid, pwd, ip):
+async def get_table_api(request, s, sid, ip):
     """
     课表查询API
     """
@@ -34,12 +34,11 @@ async def get_table_api(request, s, sid, pwd, ip):
     return web.json_response(document['table']+usertables)
     
 @require_info_login
-async def add_table_api(request, s, sid, pwd, ip):
+async def add_table_api(request, s, sid, ip):
     """
     添加课程API(添加用户自定义课程)
     """
-    json_data = await request.json()
-    data = json_data['data']
+    data = await request.json()
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     table = await tabledb.tables.find_one({'sid': sid})
@@ -64,7 +63,7 @@ async def add_table_api(request, s, sid, pwd, ip):
     )
 
 @require_info_login
-async def del_table_api(request, s, sid, pwd, ip):
+async def del_table_api(request, s, sid, ip):
     """
     删除课程API/(可以)删除信息门户课程
     """
@@ -97,38 +96,46 @@ async def del_table_api(request, s, sid, pwd, ip):
     )
     
 @require_info_login
-async def update_table_api(request, s, sid, pwd, ip):
+async def update_table_api(request, s, sid, ip):
     """
     更新课程API/自定义/信息门户课程
     """
+    find = False
     id = request.match_info.get('id')
-    json_data = await request.json()
-    data = json_data['data']
+    data = await request.json()
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     user = await userdb.users.find_one({'sid': sid})
     table = await tabledb.tables.find_one({'sid': sid})
     table_table = []; user_table = []
+
+    def update_table(tables, find): # 闭包
+        for index, item in enumerate(tables):
+            if str(id) == item['id']:
+                color = tables[index]['color']
+                tables[index] = data;
+                tables[index]['id'] = str(id)
+                tables[index]['color'] = color
+                find = True; break
+        return tables, find
+
     if table:
         table_table = table['table']
-    if user:
-        user_table = user['table']
-    tables = user_table + table_table
-    for index, item in enumerate(tables):
-        if str(id) == item['id']:
-            color = tables[index]['color']
-            tables[index] = data
-            tables[index]['id'] = str(id)
-            tables[index]['color'] = color
-            await userdb['users'].update_one({'sid': sid}, {'$set': {'table': tables}})
-            return Response(body=b'{}',
-                content_type='application/json', status=200
-            )
-    return Response(body=b'{}',
-        content_type='application/json', status=404
-    )
+        table_table, find = update_table(table_table, find)
+        if find:
+            await tabledb['tables'].update_one({'sid': sid}, {'$set': {'table': table_table}})
 
-api.router.add_route('POST', '/table/', get_table_api, name='get_table_api')
-api.router.add_route('POST', '/table/add/', add_table_api, name='add_table_api')
+    if user and not find:
+        user_table = user['table']
+        user_table, find = update_table(user_table, find)
+        if find:
+            await userdb['users'].update_one({'sid': sid}, {'$set': {'table': user_table}})
+
+    if find:
+        return Response(body=b'{}', content_type='application/json', status=200)
+    return Response(body=b'{}', content_type='application/json', status=404)
+
+api.router.add_route('GET', '/table/', get_table_api, name='get_table_api')
+api.router.add_route('POST', '/table/', add_table_api, name='add_table_api')
 api.router.add_route('DELETE', '/table/{id}/', del_table_api, name='del_table_api')
-api.router.add_route('PUT', '/table/{id}/', update_table_api, name='update_table_api')
+api.router.add_route('PUT', '/table/{id}/', update_table_api, name='updatei_table_api')

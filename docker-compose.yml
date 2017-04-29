@@ -1,4 +1,3 @@
-# ------ login_api ------
 grade_api:
     build: .
     env_file:
