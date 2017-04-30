@@ -58,9 +58,7 @@ async def add_table_api(request, s, sid, ip):
         await userdb['users'].update_one({'sid': sid}, {'$set': {'table': user_table}})
     else:
         await userdb['users'].insert_one({'sid': sid, 'table': user_table})
-    return Response(body=b'{"id": %s}' % bytes(max_id+1),
-        content_type='application/json', status=201
-    )
+    return web.json_response({'id': max_id+1})
 
 @require_info_login
 async def del_table_api(request, s, sid, ip):
