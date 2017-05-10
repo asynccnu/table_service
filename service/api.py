@@ -30,7 +30,7 @@ async def get_table_api(request, s, sid, ip):
                 tables[index]['color'] = index-4*(index//4) # 分配color
             await tabledb.tables.insert_one({'sid': sid, 'table': tables})
             return web.json_response(tables+usertables)
-        return web.json_response({'error': 'null'})
+        return web.Response(body=b"{'error': 'null'}", content_type='application/json', status=500)
     return web.json_response(document['table']+usertables)
     
 @require_info_login
@@ -50,7 +50,7 @@ async def add_table_api(request, s, sid, ip):
         table_table = table['table']
     tables = user_table + table_table
     item_ids = [int(item['id']) for item in tables]
-    max_id = max(item_ids)
+    max_id = max(item_ids or [1])
     new_json = {'id': str(max_id+1), 'color': 0}
     new_json.update(data)
     user_table.append(new_json)
