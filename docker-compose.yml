@@ -4,4 +4,4 @@ table_api:
         - container.env
     command: gunicorn wsgi:app -k aiohttp.worker.GunicornWebWorker -b 0.0.0.0:8080 --log-level DEBUG
     ports:
-        - "5566:8080"
+        - "5588:8080"
