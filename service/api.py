@@ -30,7 +30,7 @@ async def get_table_api(request, s, sid, ip):
                 tables[index]['color'] = index-4*(index//4) # 分配color
             await tabledb.tables.insert_one({'sid': sid, 'table': tables})
             return web.json_response(tables+usertables)
-        return web.Response(body=b"{'error': 'null'}", content_type='application/json', status=500)
+        return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
     return web.json_response(document['table']+usertables)
     
 @require_info_login
@@ -39,6 +39,7 @@ async def add_table_api(request, s, sid, ip):
     添加课程API(添加用户自定义课程)
     """
     data = await request.json()
+    del data['id'] # 删除兼容的id字段
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     table = await tabledb.tables.find_one({'sid': sid})
@@ -52,7 +53,7 @@ async def add_table_api(request, s, sid, ip):
     item_ids = [int(item['id']) for item in tables]
     max_id = max(item_ids or [1])
     new_json = {'id': str(max_id+1), 'color': 0}
-    new_json.update(data)
+    new_json.update(data) # 此时id不会被覆盖
     user_table.append(new_json)
     if user:
         await userdb['users'].update_one({'sid': sid}, {'$set': {'table': user_table}})
