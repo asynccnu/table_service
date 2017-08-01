@@ -15,7 +15,7 @@ def require_info_login(f):
             cookies = {'BIGipServerpool_jwc_xk': BIGipServerpool_jwc_xk, 'JSESSIONID': JSESSIONID}
             return await f(request, cookies, sid, None, *args, **kwargs)
         else: return Response(
-            body = b'', content_type = 'application/json',
+            body = b'table-service unauthorized', content_type = 'application/json',
             status = 401
         )
     return decorator

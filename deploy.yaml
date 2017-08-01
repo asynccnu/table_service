@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: asynccnu-table
+  labels:
+    run: asynccnu-table
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: asynccnu-table
+    spec:
+      containers:
+      - name: asynccnu-table
+        image: registry.cn-shenzhen.aliyuncs.com/asynccnu/table_service
+        args:
+          - gunicorn
+          - wsgi:app
+          - -k
+          - aiohttp.worker.GunicornWebWorker
+          - -b
+          - 0.0.0.0:8080
+          - --log-level
+          - DEBUG
+        env:
+          - name: XNM
+            value: "2016"
+          - name: XQM
+            value: "12"
+          - name: MONGOHOST
+            value: "123.56.41.13"
+          - name: MONGOPORT
+            value: "27020"
+        ports:
+        - containerPort: 8080
