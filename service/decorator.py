@@ -8,13 +8,13 @@ def require_info_login(f):
     async def decorator(request, *args, **kwargs):
         headers = request.headers
         req_headers = dict(headers)
-        BIGipServerpool_jwc_xk = req_headers.get("Bigipserverpool_Jwc_Xk")
+        BIGipServerpool_jwc_xk = req_headers.get("Bigipserverpool")
         JSESSIONID = req_headers.get("Jsessionid")
         sid = req_headers.get("Sid")
         err_msg = "missing "
         authorized = True
         if not BIGipServerpool_jwc_xk:
-            err_msg += "BIGipServerpool_jwc_xk: %s " % str(BIGipServerpool_jwc_xk); authorized = False
+            err_msg += "BIGipServerpool: %s " % str(BIGipServerpool_jwc_xk); authorized = False
         if not JSESSIONID:
             err_msg += "JSESSIONID: %s " % str(JSESSIONID); authorized = False
         if not sid:
