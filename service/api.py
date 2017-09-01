@@ -2,7 +2,7 @@ import os
 from aiohttp import web
 from aiohttp.web import Response
 from .spider import get_table
-from .decorator import require_info_login
+from .decorator import require_info_login, require_sid
 
 api = web.Application()
 
@@ -26,15 +26,15 @@ async def get_table_api(request, s, sid, ip):
         tables = await get_table(s, sid, ip, xnm, xqm)
         if tables:
             for index, item in enumerate(tables):
-                tables[index]['id'] = str(index) # 分配id
+                tables[index]['id'] = str(index+1) # 分配id
                 tables[index]['color'] = index-4*(index//4) # 分配color
             await tabledb.tables.insert_one({'sid': sid, 'table': tables})
             return web.json_response(tables+usertables)
         return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
     return web.json_response(document['table']+usertables)
-    
-@require_info_login
-async def add_table_api(request, s, sid, ip):
+
+@require_sid
+async def add_table_api(request, sid, ip):
     """
     添加课程API(添加用户自定义课程)
     """
@@ -93,7 +93,7 @@ async def del_table_api(request, s, sid, ip):
     return Response(body=b'{}',
         content_type='application/json', status=404
     )
-    
+
 @require_info_login
 async def update_table_api(request, s, sid, ip):
     """

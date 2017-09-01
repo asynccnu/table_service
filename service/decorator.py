@@ -24,3 +24,16 @@ def require_info_login(f):
         cookies = {'BIGipServerpool_jwc_xk': BIGipServerpool_jwc_xk, 'JSESSIONID': JSESSIONID}
         return await f(request, cookies, sid, None, *args, **kwargs)
     return decorator
+
+
+def require_sid(f):
+    @functools.wraps(f)
+    async def decorator(request, *args, **kwargs):
+        headers = request.headers
+        req_headers = dict(headers)
+        sid = req_headers.get("Sid")
+        if not sid:
+            err_msg = "missing Sid: %s" % str(sid)
+            return json_response(data={"err_msg": err_msg}, status=401)
+        return await f(request, sid, None, *args, **kwargs)
+    return decorator
