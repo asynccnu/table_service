@@ -12,6 +12,7 @@ headers = {
 async def get_table(s, sid, ip, xnm, xqm):
     table_url = table_index_url % sid
     payload = {'xnm': xnm, 'xqm': xqm}
+    weekday = {'1':'星期一','2':'星期二','3':'星期三','4':'星期四','5':'星期五','6':'星期六','7':'星期日'}
     async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True),
             cookies=s, headers=headers) as session:
         async with session.post(table_url, data=payload) as resp:
@@ -59,11 +60,16 @@ async def get_table(s, sid, ip, xnm, xqm):
                     s_class = int(_class[0])
                     e_class = int(_class[-1])
                     d_class = e_class - s_class + 1
+
+                    day_ = item.get('xqjmc')                        # 将 1，2，3，格式的数据改成星期一，星期二
+                    if weekday.get(day_) is not None :
+                        day_ = weekday[day_]
+
                     _item_dict = {
                         'course': item.get('kcmc'),
                         'teacher': item.get('xm').split("\n")[0],
                         'weeks': ','.join(str_weeks_list),
-                        'day': item.get('xqjmc'),
+                        'day': day_,
                         'start': s_class,
                         'during': d_class,
                         'place': item.get('xqmc') + item.get('cdmc'),
