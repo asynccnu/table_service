@@ -19,8 +19,17 @@ async def get_table_api(request, s, sid, ip):
     document = await tabledb.tables.find_one({'sid': sid})
     userdoc = await userdb.users.find_one({'sid': sid})
     usertables = []
-    if userdoc:
-        usertables = userdoc['table']
+
+    if userdoc:                                                          # 将 1，2，3，格式的数据改成星期一，星期二
+        usertables_ = userdoc['table']
+        weekday = {'1': '星期一', '2': '星期二', '3': '星期三', '4': '星期四', '5': '星期五', '6': '星期六', '7': '星期日'}
+        for item in usertables_ :
+            day_ = item['day']
+            if weekday.get(day_) is not None:
+                day_ = weekday[day_]
+                item['day'] = day_
+            usertables.append(item)
+
     if not document:
         # 用户第一次请求, 爬取信息门户课表并写入数据库
         tables = await get_table(s, sid, ip, xnm, xqm)
@@ -31,6 +40,7 @@ async def get_table_api(request, s, sid, ip):
             await tabledb.tables.insert_one({'sid': sid, 'table': tables})
             return web.json_response(tables+usertables)
         return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
+
     return web.json_response(document['table']+usertables)
 
 @require_sid
