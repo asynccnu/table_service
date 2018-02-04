@@ -49,7 +49,6 @@ async def add_table_api(request, sid, ip):
     添加课程API(添加用户自定义课程)
     """
     data = await request.json()
-    del data['id'] # 删除兼容的id字段
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     table = await tabledb.tables.find_one({'sid': sid})
