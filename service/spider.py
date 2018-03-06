@@ -16,6 +16,7 @@ async def get_table(s, sid, ip, xnm, xqm):
     async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True),
             cookies=s, headers=headers) as session:
         async with session.post(table_url, data=payload) as resp:
+            print(await resp.text())
             try:
                 json_data = await resp.json()
                 # prase json_data
