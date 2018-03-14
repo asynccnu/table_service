@@ -2,6 +2,7 @@ import os
 from aiohttp import web
 from aiohttp.web import Response
 from .spider import get_table
+from .szkc_spider import get_szkc_table
 from .decorator import require_info_login, require_sid
 
 api = web.Application()
@@ -12,12 +13,13 @@ async def get_table_api(request, s, sid, ip):
     """
     课表查询API
     """
-    xnm = os.getenv('XNM')
-    xqm = os.getenv('XQM')
+    xnm = os.getenv('XNM') or 2016
+    xqm = os.getenv('XQM') or 3
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     document = await tabledb.tables.find_one({'sid': sid})
     userdoc = await userdb.users.find_one({'sid': sid})
+    szkcdoc = await tabledb.szkcs.find_one({'sid':sid})
     usertables = []
 
     if userdoc:                                                          # 将 1，2，3，格式的数据改成星期一，星期二
@@ -30,6 +32,7 @@ async def get_table_api(request, s, sid, ip):
                 item['day'] = day_
             usertables.append(item)
 
+    tables = []
     if not document:
         # 用户第一次请求, 爬取信息门户课表并写入数据库
         tables = await get_table(s, sid, ip, xnm, xqm)
@@ -38,10 +41,38 @@ async def get_table_api(request, s, sid, ip):
                 tables[index]['id'] = str(index+1) # 分配id
                 tables[index]['color'] = index-4*(index//4) # 分配color
             await tabledb.tables.insert_one({'sid': sid, 'table': tables})
-            return web.json_response(tables+usertables)
-        return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
+            #return web.json_response(tables+usertables)
+        else :
+            return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
+    else :
+        tables = document['table']
 
-    return web.json_response(document['table']+usertables)
+    szkcs = []
+    if not szkcdoc :
+        # 用户第一次请求，爬取素质课，并写入数据库
+        # 找出课表中的最大id，防止ID重复
+        user_table = []
+        table_table = []
+        if document:
+            table_table = document['table']
+        if userdoc:
+            user_table = userdoc['table']
+
+        tables = table_table + user_table
+        item_ids = [int(item['id']) for item in tables]
+        max_id = max(item_ids or [1])
+
+        szkcs = await get_szkc_table(xnm,xqm,sid)
+        if szkcs :
+            for index, item in enumerate(szkcs) :
+                szkcs[index]['id'] = str(index+1+max_id)  # 要保证不重复
+                szkcs[index]['color'] = index-4*(index//4)
+            await tabledb.szkcs.insert_one({'sid':sid,'table':szkcs})
+    else :
+        szkcs = szkcdoc['table']
+
+    return web.json_response(tables+usertables+szkcs)
+
 
 @require_sid
 async def add_table_api(request, sid, ip):
@@ -53,12 +84,15 @@ async def add_table_api(request, sid, ip):
     userdb = request.app['userdb']
     table = await tabledb.tables.find_one({'sid': sid})
     user = await userdb.users.find_one({'sid': sid})
-    user_table = []; table_table = []
+    szkc = await tabledb.szkcs.find_one({'sid':sid})
+    user_table = []; table_table = [] ; szkc_table = []
     if user:
         user_table = user['table']
     if table:
         table_table = table['table']
-    tables = user_table + table_table
+    if szkc:
+        szkc_table = szkc['table']
+    tables = user_table + table_table + szkc_table
     item_ids = [int(item['id']) for item in tables]
     max_id = max(item_ids or [1])
     new_json = {'id': str(max_id+1), 'color': 0}
@@ -70,21 +104,25 @@ async def add_table_api(request, sid, ip):
         await userdb['users'].insert_one({'sid': sid, 'table': user_table})
     return web.json_response({'id': max_id+1})
 
-@require_info_login
-async def del_table_api(request, s, sid, ip):
+#@require_info_login
+async def del_table_api(request):
     """
     删除课程API/(可以)删除信息门户课程
     """
     id = request.match_info.get('id')
+    sid = request.match_info.get('sid')
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     user = await userdb.users.find_one({'sid': sid})
     table = await tabledb.tables.find_one({'sid': sid})
-    table_table = []; user_table = []
+    szkc = await tabledb.szkcs.find_one({'sid':sid})
+    table_table = []; user_table = []; szkc_table = []
     if table:
         table_table = table['table']
     if user:
         user_table = user['table']
+    if szkc:
+        szkc_table = user['table']
     for index, item in enumerate(table_table):
         if str(id) == item['id']:
             del table_table[index]
@@ -98,6 +136,13 @@ async def del_table_api(request, s, sid, ip):
             await userdb['users'].update_one({'sid': sid}, {'$set': {'table': user_table}})
             return Response(body=b'{}',
                 content_type='application/json', status=200
+            )
+    for index, item, in enumerate(szkc_table):
+        if str(id) == item['id']:
+            del szkc_table[index]
+            await tabledb['szkcs'].update_one({'sid':sid},{'$set': {'table':szkc_table}})
+            return Response(body=b'{}',
+                            content_type='application/json', status=200
             )
     return Response(body=b'{}',
         content_type='application/json', status=404
@@ -115,7 +160,8 @@ async def update_table_api(request, s, sid, ip):
     userdb = request.app['userdb']
     user = await userdb.users.find_one({'sid': sid})
     table = await tabledb.tables.find_one({'sid': sid})
-    table_table = []; user_table = []
+    szkc = await tabledb.szkcs.find_one({'sid':sid})
+    table_table = []; user_table = [] ; szkc_table = []
 
     def update_table(tables, find): # 闭包
         for index, item in enumerate(tables):
@@ -139,11 +185,40 @@ async def update_table_api(request, s, sid, ip):
         if find:
             await userdb['users'].update_one({'sid': sid}, {'$set': {'table': user_table}})
 
+    if szkc and not find:
+        szkc_table = szkc['table']
+        szkc_table, find = update_table(szkc_table,find)
+        if find:
+            await tabledb['szkcs'].update_one({'sid':sid}, {'$set': {'table': szkc_table}})
+
     if find:
         return Response(body=b'{}', content_type='application/json', status=200)
     return Response(body=b'{}', content_type='application/json', status=404)
 
+
+async def get_table_api_tmp(request):
+    """
+    课表查询API
+    """
+    data = await request.json()
+    sid = data['sid']
+    #MONGOHOST = os.getenv('MONGOHOST')
+    xnm = os.getenv('XNM')
+    xqm = os.getenv('XQM')
+    userdb = request.app['userdb']
+    userdoc = await userdb.users.find_one({'sid': sid})
+    usertables = []
+
+    if userdoc:                                                          # 将 1，2，3，格式的数据改成星期一，星期二
+        usertables_ = userdoc['table']
+        for item in usertables_ :
+            usertables.append(item)
+
+    return web.json_response(usertables)
+
+
 api.router.add_route('GET', '/table/', get_table_api, name='get_table_api')
+api.router.add_route('POST', '/tmp/table/', get_table_api_tmp, name='get_table_api_tmp')
 api.router.add_route('POST', '/table/', add_table_api, name='add_table_api')
-api.router.add_route('DELETE', '/table/{id}/', del_table_api, name='del_table_api')
+api.router.add_route('DELETE', '/table/{id}/{sid}', del_table_api, name='del_table_api')
 api.router.add_route('PUT', '/table/{id}/', update_table_api, name='updatei_table_api')
