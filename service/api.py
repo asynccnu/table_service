@@ -97,6 +97,7 @@ async def add_table_api(request, sid, ip):
     max_id = max(item_ids or [1])
     new_json = {'id': str(max_id+1), 'color': 0}
     new_json.update(data) # 此时id不会被覆盖
+    #print(new_json)
     user_table.append(new_json)
     if user:
         await userdb['users'].update_one({'sid': sid}, {'$set': {'table': user_table}})
@@ -110,7 +111,6 @@ async def del_table_api(request,s, sid, ip):
     删除课程API/(可以)删除信息门户课程
     """
     id = request.match_info.get('id')
-    sid = request.match_info.get('sid')
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     user = await userdb.users.find_one({'sid': sid})
@@ -220,5 +220,5 @@ async def get_table_api_tmp(request):
 api.router.add_route('GET', '/table/', get_table_api, name='get_table_api')
 api.router.add_route('POST', '/tmp/table/', get_table_api_tmp, name='get_table_api_tmp')
 api.router.add_route('POST', '/table/', add_table_api, name='add_table_api')
-api.router.add_route('DELETE', '/table/{id}/{sid}', del_table_api, name='del_table_api')
+api.router.add_route('DELETE', '/table/{id}/', del_table_api, name='del_table_api')
 api.router.add_route('PUT', '/table/{id}/', update_table_api, name='updatei_table_api')
