@@ -58,8 +58,8 @@ async def get_table_api(request, s, sid, ip):
         if userdoc:
             user_table = userdoc['table']
 
-        tables = table_table + user_table
-        item_ids = [int(item['id']) for item in tables]
+        tables_ = table_table + user_table
+        item_ids = [int(item['id']) for item in tables_]
         max_id = max(item_ids or [1])
 
         szkcs = await get_szkc_table(xnm,xqm,sid)
@@ -97,7 +97,6 @@ async def add_table_api(request, sid, ip):
     max_id = max(item_ids or [1])
     new_json = {'id': str(max_id+1), 'color': 0}
     new_json.update(data) # 此时id不会被覆盖
-    #print(new_json)
     user_table.append(new_json)
     if user:
         await userdb['users'].update_one({'sid': sid}, {'$set': {'table': user_table}})
