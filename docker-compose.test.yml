@@ -1,0 +1,15 @@
+table_api:
+    build: .
+    env_file:
+        - container.env
+    command: gunicorn wsgi:app -k aiohttp.worker.GunicornWebWorker -b 0.0.0.0:8080 --log-level DEBUG
+    external_links:
+        - test_mongo:mongo 
+    ports:
+        - "5588:8080"
+
+test-mongo:
+    image: mongo
+    ports:
+        - "27017:27017"
+    container_name: "test_mongo"
