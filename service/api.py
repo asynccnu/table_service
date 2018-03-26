@@ -53,8 +53,12 @@ async def get_table_api(request, s, sid, ip):
         # 找出课表中的最大id，防止ID重复
         user_table = []
         table_table = []
+        # 若不为第一次请求则可以从document中拿到，但是若是第一次请求
+        # document是没有重新请求新的，故需要从tables中获取
         if document:
             table_table = document['table']
+        else:
+            table_table = tables
         if userdoc:
             user_table = userdoc['table']
 
