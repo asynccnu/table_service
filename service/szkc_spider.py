@@ -41,8 +41,10 @@ async def get_szkc_table(xnm, xqm, s):
     async with aiohttp.ClientSession(headers = headers,
                                      cookies = cookies) as session:
         async with session.post(table_url, data = payload) as resp:
-            json_data = await resp.json()
-
+            try :
+                json_data = await resp.json()
+            except JSONDecodeError :
+                return res
             for each in json_data['items'] :
                 print(each['sksj'])
                 di_index = each['sksj'].find("第")

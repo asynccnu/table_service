@@ -67,11 +67,11 @@ async def get_table_api(request, s, sid, ip):
         max_id = max(item_ids or [1])
 
         szkcs = await get_szkc_table(xnm,xqm,sid)
-        if szkcs :
-            for index, item in enumerate(szkcs) :
-                szkcs[index]['id'] = str(index+1+max_id)  # 要保证不重复
-                szkcs[index]['color'] = index-4*(index//4)
-            await tabledb.szkcs.insert_one({'sid':sid,'table':szkcs})
+        #if szkcs :
+        for index, item in enumerate(szkcs) :
+            szkcs[index]['id'] = str(index+1+max_id)  # 要保证不重复
+            szkcs[index]['color'] = index-4*(index//4)
+        await tabledb.szkcs.insert_one({'sid':sid,'table':szkcs})
     else :
         szkcs = szkcdoc['table']
 
