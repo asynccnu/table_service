@@ -11,6 +11,8 @@
     MONGOPORT=27017     // mongodb port
 	ADMIN_SID=szkc admin username
 	ADMIN_PWD=szkc admin password 
+	TABLEDB=tabledb     // tabledb名字
+	USERDB=userdb       // userdb名字
 
 ## 部署
 
