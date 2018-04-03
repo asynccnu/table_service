@@ -13,17 +13,13 @@ async def get_table_api(request, s, sid, ip):
     """
     课表查询API
     """
-    print("!!!!")
     xnm = os.getenv('XNM') or 2016
     xqm = os.getenv('XQM') or 3
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     document = await tabledb.tables.find_one({'sid': sid})
-    print("documented!")
     userdoc = await userdb.users.find_one({'sid': sid})
-    print("userdoced")
     szkcdoc = await tabledb.szkcs.find_one({'sid':sid})
-    print("szkcdoced")
     usertables = []
 
     if userdoc:                                                          # 将 1，2，3，格式的数据改成星期一，星期二
