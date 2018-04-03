@@ -63,14 +63,29 @@ async def get_szkc_table(xnm, xqm, s):
                     _weeks = _weeks.split(',')
                     for item in _weeks :
                         if '-' in item :
-                            tmp_week = item.split('-')
-                            #print(tmp_week)
-                            _start = int(tmp_week[0])
-                            _end = int(tmp_week[1][:-1])
-                            #print(_start,_end)
-                            _week_list = [str(i) for i in range(_start,_end+1) ]
-                            week_list.extend(_week_list)
-                           # print(week_list)
+                            if "周(双)" in item:
+                                tmp_week =  item.split('-')
+                                _start = int(tmp_week[0])
+                                _end_list = tmp_week[1][:-1].split("周")
+                                _end = int(_end_list[0])
+                                _week_list = [str(i) for i in range(_start,_end+1) if i % 2 == 0]
+                                week_list.extend(_week_list)
+                            elif "周(单)" in item:
+                                tmp_week =  item.split('-')
+                                _start = int(tmp_week[0])
+                                _end_list = tmp_week[1][:-1].split("周")
+                                _end = int(_end_list[0])
+                                _week_list = [str(i) for i in range(_start,_end+1) if i % 2 == 1]
+                                week_list.extend(_week_list)
+                            else:
+                                tmp_week = item.split('-')
+                                #print(tmp_week)
+                                _start = int(tmp_week[0])
+                                _end = int(tmp_week[1][:-1])
+                                #print(_start,_end)
+                                _week_list = [str(i) for i in range(_start,_end+1) ]
+                                week_list.extend(_week_list)
+                               # print(week_list)
                         else :
                             week_list.append(item[:-1])
                 else :
