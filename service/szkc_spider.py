@@ -103,15 +103,15 @@ async def get_szkc_table(xnm, xqm, s):
                         else :
                             week_list.append(_weeks[:-1])
                 one = {
-					'course': each['kcmc'],
-					'teacher': each['jsxm'],
-					'place': each['jxdd'],
-					'day': each['sksj'][:3],
-					'start' : start,
-					'during' : during,
-					"weeks" : ",".join(week_list),
-					'remind' : False,
-				}
+					            'course': each['kcmc'],
+					            'teacher': each['jsxm'],
+					            'place': each['jxdd'],
+					            'day': each['sksj'][:3],
+					            'start' : start,
+					            'during' : during,
+					            "weeks" : ",".join(week_list),
+					            'remind' : False,
+				            }
                 res.append(one)
                 print(one)
             return res

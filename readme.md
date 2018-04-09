@@ -9,6 +9,10 @@
 
     MONGOHOST=localhost // mongodb host
     MONGOPORT=27017     // mongodb port
+	ADMIN_SID=szkc admin username
+	ADMIN_PWD=szkc admin password 
+	TABLEDB=tabledb     // tabledb名字
+	USERDB=userdb       // userdb名字
 
 ## 部署
 
@@ -22,3 +26,4 @@ docker-compose ps
 ## Log
 
 + 2017年4月29日: 拖了2个月了...ㄟ( ▔, ▔ )ㄏ
++ 2018年3月20日: 在课表中增加了素质课
