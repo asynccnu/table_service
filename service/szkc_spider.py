@@ -45,58 +45,57 @@ async def get_szkc_table(xnm, xqm, s):
                 json_data = await resp.json()
             except JSONDecodeError :
                 return res
+            #print(json_data['items'])
             for each in json_data['items'] :
-                print(each['sksj'])
-                di_index = each['sksj'].find("第")
-                jie_index = each['sksj'].find("节")
-                times = each['sksj'][di_index+1:jie_index]
-                times = times.split('-')
-                start = int(times[0])
-                during  = int(times[1]) - int(times[0]) + 1
-
-                k_index = each['sksj'].find("{")
-                zhou_index = each['sksj'].find("}")
-                _weeks = each['sksj'][k_index+1:zhou_index]
+                new_data = each['sksj'].split(';')
+                #print(new_data)
+                #print(each['sksj'])
                 week_list = []
-                print(_weeks)
-                if ',' in _weeks :
-                    _weeks = _weeks.split(',')
-                    for item in _weeks :
-                        if '-' in item :
-                            tmp_week = item.split('-')
-                            #print(tmp_week)
+                for each_time in new_data :
+                    di_index = each_time.find("第")
+                    jie_index = each_time.find("节")
+                    times = each_time[di_index+1:jie_index]
+                    times = times.split('-')
+                    start = int(times[0])
+                    during  = int(times[1]) - int(times[0]) + 1
+
+                    k_index = each_time.find("{")
+                    zhou_index = each_time.find("}")
+                    _weeks = each_time[k_index+1:zhou_index]
+                    #week_list = []
+                    #print(_weeks)
+                    if ',' in _weeks :
+                        _weeks = _weeks.split(',')
+                        for item in _weeks :
+                            if '-' in item :
+                                tmp_week = item.split('-')
+                                _start = int(tmp_week[0])
+                                _end = int(tmp_week[1][:-1])
+                                _week_list = [str(i) for i in range(_start,_end+1) ]
+                                week_list.extend(_week_list)
+                            else :
+                                week_list.append(item[:-1])
+                    else :
+                        if '-' in  _weeks :
+                            tmp_week = _weeks.split('-')
                             _start = int(tmp_week[0])
                             _end = int(tmp_week[1][:-1])
-                            #print(_start,_end)
-                            _week_list = [str(i) for i in range(_start,_end+1) ]
+                            _week_list = [str(i) for i in range(_start,_end+1)]
                             week_list.extend(_week_list)
-                           # print(week_list)
                         else :
-                            week_list.append(item[:-1])
-                else :
-                    if '-' in  _weeks :
-                        tmp_week = _weeks.split('-')
-                        _start = int(tmp_week[0])
-                        _end = int(tmp_week[1][:-1])
-                        _week_list = [str(i) for i in range(_start,_end+1)]
-                        week_list.extend(_week_list)
-                    else :
-                        week_list.append(_weeks[:-1])
-                #print(week_list)
-               # print(_weeks)
+                            week_list.append(_weeks[:-1])
                 one = {
-                    'course': each['kcmc'],
-                    'teacher': each['jsxm'],
-                    'place': each['jxdd'],
-                    'day': each['sksj'][:3],
-	                'start' : start,
-                    'during' : during,
-                    "weeks" : ",".join(week_list),
-	                'remind' : False,
-                }
-                #print(one)
-                #print(each)
+					'course': each['kcmc'],
+					'teacher': each['jsxm'],
+					'place': each['jxdd'],
+					'day': each['sksj'][:3],
+					'start' : start,
+					'during' : during,
+					"weeks" : ",".join(week_list),
+					'remind' : False,
+				}
                 res.append(one)
+                print(one)
             return res
         return None
 
@@ -141,6 +140,6 @@ async def login_szkc(sid, pwd):
 
 if __name__ == '__main__' :
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_szkc_table(2016,3,2016210813))
+    loop.run_until_complete(get_szkc_table(2017,12,2017211712))
     loop.close()
 
