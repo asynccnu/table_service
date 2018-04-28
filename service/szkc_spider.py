@@ -16,6 +16,7 @@ headers = {
 sid = os.getenv('ADMIN_SID') or 'muxi'
 pwd = os.getenv('ADMIN_PWD') or 'ihdmx123'
 
+
 async def get_szkc_table(xnm, xqm, s):
     cookies = await login_szkc(sid, pwd)
     tlist = str(time.time()).split('.')
@@ -47,6 +48,8 @@ async def get_szkc_table(xnm, xqm, s):
                 return res
             #print(json_data['items'])
             for each in json_data['items'] :
+                #day_dict = {'星期一':{},'星期二':{},'星期三':{},'星期四':{},'星期五':{},'星期六':{},'星期日':{}}
+                day_dict = {}
                 #print(each)
                 t_info = each['sksj']                                # 星期一第1-2节{6周};星期一第1-2节{7周};星期一第1-2节{8周};星期一第1-2节{9周}
                 #print(t_info)
@@ -55,6 +58,8 @@ async def get_szkc_table(xnm, xqm, s):
                 for oneday in oneday_info :                          # 星期一第1-2节{6周}
                     #print(oneday)
                     whichday = oneday[:3]
+                    if whichday not in day_dict:
+                        day_dict[whichday] = {}
                     k_index = oneday.find("{")
                     zhou_index = oneday.find("}")
                     _weeks = oneday[k_index + 1:zhou_index]           # 11周，10-13周，或10-5周（双）
@@ -70,6 +75,12 @@ async def get_szkc_table(xnm, xqm, s):
                     # print(oneday[:3],times_)
 
                     for times in times_ :                             # ['1-2','4-5']
+                        #print(whichday,times)
+                        if times not in day_dict[whichday] :
+                            day_dict[whichday][times] = []
+                        day_dict[whichday][times] += week_list
+                        #print(day_dict)
+                        """
                         times = times.split('-')                      # ['1','2']
                         start = int(times[0])
                         during = int(times[1]) - int(times[0]) + 1
@@ -85,7 +96,28 @@ async def get_szkc_table(xnm, xqm, s):
                             'remind': False,
                         }
                         res.append(one)
+                        #print(one)
+                        """
+                #print(day_dict)
+                for day, time_ in day_dict.items():
+                    for times, week_list in time_.items() :
+                        #print(times,week_list)
+                    #print(time_)
+                        times = times.split('-')  # ['1','2']
+                        start = int(times[0])
+                        during = int(times[1]) - int(times[0]) + 1
+                        one = {
+                            'course': each['kcmc'],
+                            'teacher': each['jsxm'],
+                            'place': each['jxdd'],
+                            'day': day,
+                            'start': start,
+                            'during': during,
+                            "weeks": ",".join(week_list),
+                            'remind': False,
+                        }
                         print(one)
+                        res.append(one)
 
                 """
                 new_data = each['sksj'].split(';')
@@ -268,6 +300,6 @@ def getweek(_weeks) :
 
 if __name__ == '__main__' :
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_szkc_table(2017,12,2017211762))
+    loop.run_until_complete(get_szkc_table(2017,12,2017211761))
     loop.close()
 
