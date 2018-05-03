@@ -73,6 +73,11 @@ async def get_szkc_table(xnm, xqm, s):
                         day_dict[whichday][times] = list(set(day_dict[whichday][times]))              # 去除重复
                 for day, time_ in day_dict.items():
                     for times, week_list in time_.items() :
+
+                        week_list = [int(i) for i in week_list]           # 给week排序
+                        week_list.sort()
+                        week_list = [str(i) for i in week_list]
+
                         times = times.split('-')  # ['1','2']
                         start = int(times[0])
                         during = int(times[1]) - int(times[0]) + 1
@@ -178,6 +183,6 @@ def getweek(_weeks) :
 
 if __name__ == '__main__' :
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_szkc_table(2017,12,2015210806))
+    loop.run_until_complete(get_szkc_table(2017,12,2017210507))
     loop.close()
 
