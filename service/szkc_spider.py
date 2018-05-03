@@ -69,14 +69,22 @@ async def get_szkc_table(xnm, xqm, s):
                         if times not in day_dict[whichday] :
                             day_dict[whichday][times] = []
                         day_dict[whichday][times] += week_list
+                        day_dict[whichday][times] = list(set(day_dict[whichday][times]))              # 去除重复
                 for day, time_ in day_dict.items():
                     for times, week_list in time_.items() :
                         times = times.split('-')  # ['1','2']
                         start = int(times[0])
                         during = int(times[1]) - int(times[0]) + 1
+                        teacher = each['jsxm'].split(',')
+                        res_teacher = []
+                        for t in teacher:
+                            if '/' in t:
+                                res_teacher.append(t.split('/')[1])
+                            else:
+                                res_teacher.append(t)
                         one = {
                             'course': each['kcmc'],
-                            'teacher': each['jsxm'],
+                            'teacher': ','.join(res_teacher),
                             'place': each['jxdd'],
                             'day': day,
                             'start': start,
@@ -135,49 +143,40 @@ def getweek(_weeks) :
     :return:
     """
     week_list = []
-    if ',' in _weeks:
-        _weeks = _weeks.split(',')
-        print(_weeks)
-        for item in _weeks:
-            if '-' in item:
-                if "周(双)" in item:
-                    tmp_week = item.split('-')
-                    _start = int(tmp_week[0])
-                    _end_list = tmp_week[1][:-1].split("周")
-                    _end = int(_end_list[0])
-                    _week_list = [str(i) for i in range(_start, _end + 1) if i % 2 == 0]
-                    week_list.extend(_week_list)
-                elif "周(单)" in item:
-                    tmp_week = item.split('-')
-                    _start = int(tmp_week[0])
-                    _end_list = tmp_week[1][:-1].split("周")
-                    _end = int(_end_list[0])
-                    _week_list = [str(i) for i in range(_start, _end + 1) if i % 2 == 1]
-                    week_list.extend(_week_list)
-                else:
-                    tmp_week = item.split('-')
-                    # print(tmp_week)
-                    _start = int(tmp_week[0])
-                    _end = int(tmp_week[1][:-1])
-                    # print(_start,_end)
-                    _week_list = [str(i) for i in range(_start, _end + 1)]
-                    week_list.extend(_week_list)
-                # print(week_list)
+   # if ',' in _weeks:
+    _weeks = _weeks.split(',')
+    for item in _weeks:
+        #print(item)
+        if '-' in item:
+            if "周(双)" in item:
+                tmp_week = item.split('-')
+                _start = int(tmp_week[0])
+                _end_list = tmp_week[1][:-1].split("周")
+                _end = int(_end_list[0])
+                _week_list = [str(i) for i in range(_start, _end + 1) if i % 2 == 0]
+                week_list.extend(_week_list)
+            elif "周(单)" in item:
+                tmp_week = item.split('-')
+                _start = int(tmp_week[0])
+                _end_list = tmp_week[1][:-1].split("周")
+                _end = int(_end_list[0])
+                _week_list = [str(i) for i in range(_start, _end + 1) if i % 2 == 1]
+                week_list.extend(_week_list)
             else:
-                week_list.append(item[:-1])
-    else:
-        if '-' in _weeks:
-            tmp_week = _weeks.split('-')
-            _start = int(tmp_week[0])
-            _end = int(tmp_week[1][:-1])
-            _week_list = [str(i) for i in range(_start, _end + 1)]
-            week_list.extend(_week_list)
+                tmp_week = item.split('-')
+                # print(tmp_week)
+                _start = int(tmp_week[0])
+                _end = int(tmp_week[1][:-1])
+                # print(_start,_end)
+                _week_list = [str(i) for i in range(_start, _end + 1)]
+                week_list.extend(_week_list)
+            # print(week_list)
         else:
-            week_list.append(_weeks[:-1])
+            week_list.append(item[:-1])
     return week_list
 
 if __name__ == '__main__' :
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_szkc_table(2017,12,2017211661))
+    loop.run_until_complete(get_szkc_table(2017,12,2015210806))
     loop.close()
 
