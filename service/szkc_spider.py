@@ -13,8 +13,9 @@ headers = {
     "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
 }
 
-sid = os.getenv('ADMIN_SID')
-pwd = os.getenv('ADMIN_PWD')
+sid = os.getenv('ADMIN_SID') or 'muxi'
+pwd = os.getenv('ADMIN_PWD') or 'ihdmx123'
+
 
 async def get_szkc_table(xnm, xqm, s):
     cookies = await login_szkc(sid, pwd)
@@ -46,72 +47,53 @@ async def get_szkc_table(xnm, xqm, s):
             except JSONDecodeError :
                 return res
             for each in json_data['items'] :
-                print(each['sksj'])
-                di_index = each['sksj'].find("第")
-                jie_index = each['sksj'].find("节")
-                times = each['sksj'][di_index+1:jie_index]
-                times = times.split('-')
-                start = int(times[0])
-                during  = int(times[1]) - int(times[0]) + 1
+                #day_dict = {'星期一':{},'星期二':{},'星期三':{},'星期四':{},'星期五':{},'星期六':{},'星期日':{}}
+                day_dict = {}
+                t_info = each['sksj']                                # 星期一第1-2节{6周};星期一第1-2节{7周};星期一第1-2节{8周};星期一第1-2节{9周}
+                oneday_info = t_info.split(';')
+                for oneday in oneday_info :                          # 星期一第1-2节{6周}
+                    whichday = oneday[:3]
+                    if whichday not in day_dict:
+                        day_dict[whichday] = {}
+                    k_index = oneday.find("{")
+                    zhou_index = oneday.find("}")
+                    _weeks = oneday[k_index + 1:zhou_index]           # 11周，10-13周，或10-5周（双）
+                    week_list = getweek(_weeks)                       # ['10', '11', '12', '13'] ['11-12']
 
-                k_index = each['sksj'].find("{")
-                zhou_index = each['sksj'].find("}")
-                _weeks = each['sksj'][k_index+1:zhou_index]
-                week_list = []
-                print(_weeks)
-                if ',' in _weeks :
-                    _weeks = _weeks.split(',')
-                    for item in _weeks :
-                        if '-' in item :
-                            if "周(双)" in item:
-                                tmp_week =  item.split('-')
-                                _start = int(tmp_week[0])
-                                _end_list = tmp_week[1][:-1].split("周")
-                                _end = int(_end_list[0])
-                                _week_list = [str(i) for i in range(_start,_end+1) if i % 2 == 0]
-                                week_list.extend(_week_list)
-                            elif "周(单)" in item:
-                                tmp_week =  item.split('-')
-                                _start = int(tmp_week[0])
-                                _end_list = tmp_week[1][:-1].split("周")
-                                _end = int(_end_list[0])
-                                _week_list = [str(i) for i in range(_start,_end+1) if i % 2 == 1]
-                                week_list.extend(_week_list)
+                    di_index = oneday.find("第")
+                    jie_index = oneday.find("节")
+                    times = oneday[di_index + 1:jie_index]  # 1-4,7-10
+                    times_ = times.split(',')                         # ['1-4', '7-10']
+
+                    for times in times_ :                             # ['1-2','4-5']
+                        if times not in day_dict[whichday] :
+                            day_dict[whichday][times] = []
+                        day_dict[whichday][times] += week_list
+                        day_dict[whichday][times] = list(set(day_dict[whichday][times]))              # 去除重复
+                for day, time_ in day_dict.items():
+                    for times, week_list in time_.items() :
+                        times = times.split('-')  # ['1','2']
+                        start = int(times[0])
+                        during = int(times[1]) - int(times[0]) + 1
+                        teacher = each['jsxm'].split(',')
+                        res_teacher = []
+                        for t in teacher:
+                            if '/' in t:
+                                res_teacher.append(t.split('/')[1])
                             else:
-                                tmp_week = item.split('-')
-                                #print(tmp_week)
-                                _start = int(tmp_week[0])
-                                _end = int(tmp_week[1][:-1])
-                                #print(_start,_end)
-                                _week_list = [str(i) for i in range(_start,_end+1) ]
-                                week_list.extend(_week_list)
-                               # print(week_list)
-                        else :
-                            week_list.append(item[:-1])
-                else :
-                    if '-' in  _weeks :
-                        tmp_week = _weeks.split('-')
-                        _start = int(tmp_week[0])
-                        _end = int(tmp_week[1][:-1])
-                        _week_list = [str(i) for i in range(_start,_end+1)]
-                        week_list.extend(_week_list)
-                    else :
-                        week_list.append(_weeks[:-1])
-                #print(week_list)
-               # print(_weeks)
-                one = {
-                    'course': each['kcmc'],
-                    'teacher': each['jsxm'],
-                    'place': each['jxdd'],
-                    'day': each['sksj'][:3],
-	                'start' : start,
-                    'during' : during,
-                    "weeks" : ",".join(week_list),
-	                'remind' : False,
-                }
-                #print(one)
-                #print(each)
-                res.append(one)
+                                res_teacher.append(t)
+                        one = {
+                            'course': each['kcmc'],
+                            'teacher': ','.join(res_teacher),
+                            'place': each['jxdd'],
+                            'day': day,
+                            'start': start,
+                            'during': during,
+                            "weeks": ",".join(week_list),
+                            'remind': False,
+                        }
+                        print(one)
+                        res.append(one)
             return res
         return None
 
@@ -154,8 +136,47 @@ async def login_szkc(sid, pwd):
                                 return {"msg":msg}
 
 
+def getweek(_weeks) :
+    """
+    11周，10-13周，或10-5周（双）
+    :param _weeks:
+    :return:
+    """
+    week_list = []
+   # if ',' in _weeks:
+    _weeks = _weeks.split(',')
+    for item in _weeks:
+        #print(item)
+        if '-' in item:
+            if "周(双)" in item:
+                tmp_week = item.split('-')
+                _start = int(tmp_week[0])
+                _end_list = tmp_week[1][:-1].split("周")
+                _end = int(_end_list[0])
+                _week_list = [str(i) for i in range(_start, _end + 1) if i % 2 == 0]
+                week_list.extend(_week_list)
+            elif "周(单)" in item:
+                tmp_week = item.split('-')
+                _start = int(tmp_week[0])
+                _end_list = tmp_week[1][:-1].split("周")
+                _end = int(_end_list[0])
+                _week_list = [str(i) for i in range(_start, _end + 1) if i % 2 == 1]
+                week_list.extend(_week_list)
+            else:
+                tmp_week = item.split('-')
+                # print(tmp_week)
+                _start = int(tmp_week[0])
+                _end = int(tmp_week[1][:-1])
+                # print(_start,_end)
+                _week_list = [str(i) for i in range(_start, _end + 1)]
+                week_list.extend(_week_list)
+            # print(week_list)
+        else:
+            week_list.append(item[:-1])
+    return week_list
+
 if __name__ == '__main__' :
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_szkc_table(2016,3,2016210813))
+    loop.run_until_complete(get_szkc_table(2017,12,2015210806))
     loop.close()
 
