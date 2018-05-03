@@ -2,6 +2,7 @@ import asyncio
 import aiohttp
 import os
 import time
+import json
 
 pre_url = "http://122.204.187.9/jwglxt"
 pre_url2 = "http://122.204.187.9/jwglxt/xtgl/dl_loginForward.html?_t="
@@ -44,7 +45,7 @@ async def get_szkc_table(xnm, xqm, s):
         async with session.post(table_url, data = payload) as resp:
             try :
                 json_data = await resp.json()
-            except JSONDecodeError :
+            except json.decoder.JSONDecodeError :
                 return res
             for each in json_data['items'] :
                 #day_dict = {'星期一':{},'星期二':{},'星期三':{},'星期四':{},'星期五':{},'星期六':{},'星期日':{}}
