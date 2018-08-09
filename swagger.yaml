@@ -1,0 +1,172 @@
+swagger: '2.0'
+info: 
+  description: "Mana API"
+  version: "2.0.0"
+  title: "空闲教室"
+
+host: "ccnubox.muxixyz.com"
+basePath: "/api"
+
+
+schemes: 
+- "https"
+
+paths:
+  /api/table/:
+    get:
+      summary: 获取课程表
+      parameters: 
+      - in: header
+        name: Bigipserverpool
+        type: string
+        description: 登录教务处后Cookie中bigserverpool
+      - in: header
+        name: sid
+        type: integer
+        description: 学号
+      - in: header
+        name: Jsessionid
+        type: string
+        description: 登录教务处后Cookie中Jsessionid
+      - in: header
+        name: Authorization
+        type: string
+        description: Basic Base64(sid:pwd)
+      responses:
+        200:
+          description: ok
+          schema:
+            type: object
+            $ref: '#/definitions/Courses'
+        403:
+          description:  验证失败
+        404:
+         description: 根据给出查询条件未找到信息
+    
+    post:
+      summary: 增加课程
+      parameters: 
+      - in: header
+        name: sid
+        type: integer
+        description: 学号
+      - in: body
+        name: body
+        schema:
+          type: object
+          $ref: '#/definitions/Course'
+      responses:
+        201:
+          description: ok
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: 自定义课程存储ID
+        401:
+          description: 无学号Header
+        
+  /api/table/{id}/:
+    put:
+      summary: 编辑课表
+      parameters: 
+      - in: header
+        name: Bigipserverpool
+        type: string
+        description: 登录教务处后Cookie中bigserverpool
+      - in: header
+        name: sid
+        type: integer
+        description: 学号
+      - in: header
+        name: Jsessionid
+        type: string
+        description: 登录教务处后Cookie中Jsessionid
+      - in: header
+        name: Authorization
+        type: string
+        description: Basic Base64(sid:pwd)
+      - in: path
+        name: id
+        type: integer
+        description: 课程id
+        required: true
+      - in: body
+        name: body
+        schema:
+          type: object
+          $ref: '#/definitions/Course'
+  
+    delete:
+      summary: 删除课程
+      parameters: 
+      - in: header
+        name: Bigipserverpool
+        type: string
+        description: 登录教务处后Cookie中bigserverpool
+      - in: header
+        name: sid
+        type: integer
+        description: 学号
+      - in: header
+        name: Jsessionid
+        type: string
+        description: 登录教务处后Cookie中Jsessionid
+      - in: header
+        name: Authorization
+        type: string
+        description: Basic Base64(sid:pwd)
+      - in: path
+        name: id
+        type: integer
+        description: 课程id
+        required: true
+  
+      responses:
+        200:
+          description: OK
+        403:
+          description: Forbidden
+        401:
+          description: 未授权
+        404:
+          description: 待删除课程不存在
+    
+
+definitions:
+  Course:
+    type: object
+    properties:
+      course:
+        type: string
+        description: 课程名
+      teacher:
+        type: string
+        description: 老师名
+      weeks:
+        type: array
+        description: 上课周次如[1, 2, 3 ... 19]
+        items:
+          type: integer
+      day:
+        type: string
+        description: 上课星期,如 "1","2"..."7" 
+      start:
+        type: string
+        description: 课程开始时间(start=3表示上午第三节课开始上)
+      during:
+        type: string
+        description: 课程持续时间(during=2表示持续2节课)
+      place:
+        type: string
+        description: 上课地点
+      remind:
+        type: boolean
+        description: 是否提醒
+        
+  Courses:
+    type: array
+    items:
+      $ref: '#/definitions/Course'
+        
