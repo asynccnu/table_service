@@ -12,7 +12,7 @@ def create_app():
 
     setup(app, EncryptedCookieStorage(secret_key))
 
-    from .api import api
+    from .apis import api
     app.add_subapp('/api/', api)
 
     return app
