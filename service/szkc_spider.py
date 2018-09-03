@@ -38,7 +38,6 @@ async def get_szkc_table(xnm, xqm, s):
         payload.update({"xqm_list[0]":xqm})
     if xnm != "" :
         payload.update({"xn_list[0]":xnm})
-    #print(payload)
     res = []
     async with aiohttp.ClientSession(headers = headers,
                                      cookies = cookies) as session:
