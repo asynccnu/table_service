@@ -66,9 +66,9 @@ async def get_table(s, sid, ip, xnm, xqm):
                         day_ = weekday[day_]
 
                     _item_dict = {
-                        'course': item.get('kcmc'),
-                        'teacher': item.get('xm').split("\n")[0],
-                        'weeks': ','.join(str_weeks_list),
+                        'course': item.get('kcmc') or "",
+                        'teacher': item.get('xm').split("\n")[0] or "",
+                        'weeks': ','.join(str_weeks_list) or [],
                         'day': day_,
                         'start': s_class,
                         'during': d_class,
