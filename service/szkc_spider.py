@@ -38,7 +38,6 @@ async def get_szkc_table(xnm, xqm, s):
         payload.update({"xqm_list[0]":xqm})
     if xnm != "" :
         payload.update({"xn_list[0]":xnm})
-    #print(payload)
     res = []
     async with aiohttp.ClientSession(headers = headers,
                                      cookies = cookies) as session:
@@ -183,6 +182,6 @@ def getweek(_weeks) :
 
 if __name__ == '__main__' :
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_szkc_table(2017,12,2017210507))
+    loop.run_until_complete(get_szkc_table(2018,3,2016210813))
     loop.close()
 

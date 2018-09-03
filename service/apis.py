@@ -13,7 +13,7 @@ async def get_table_api(request, s, sid, ip):
     """
     课表查询API
     """
-    xnm = os.getenv('XNM') or 2016
+    xnm = os.getenv('XNM') or 2018
     xqm = os.getenv('XQM') or 3
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
@@ -48,6 +48,9 @@ async def get_table_api(request, s, sid, ip):
         tables = document['table']
 
     szkcs = []
+
+    # 素质课网站挂了，所以先把素质课的spider关了
+    """
     if not szkcdoc :
         # 用户第一次请求，爬取素质课，并写入数据库
         # 找出课表中的最大id，防止ID重复
@@ -74,6 +77,7 @@ async def get_table_api(request, s, sid, ip):
         await tabledb.szkcs.insert_one({'sid':sid,'table':szkcs})
     else :
         szkcs = szkcdoc['table']
+    """
 
     return web.json_response(tables+usertables+szkcs)
 
