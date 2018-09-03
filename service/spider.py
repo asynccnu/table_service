@@ -65,9 +65,10 @@ async def get_table(s, sid, ip, xnm, xqm):
                     if weekday.get(day_) is not None :
                         day_ = weekday[day_]
 
+                    teacher = item.setdefault('xm','').split("\n")[0]
                     _item_dict = {
                         'course': item.get('kcmc') or "",
-                        'teacher': item.get('xm').split("\n")[0] or "",
+                        'teacher': teacher,
                         'weeks': ','.join(str_weeks_list) or [],
                         'day': day_,
                         'start': s_class,
