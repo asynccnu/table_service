@@ -4,3 +4,4 @@
 venv/
 container.env
 container.test.env
+.idea 
