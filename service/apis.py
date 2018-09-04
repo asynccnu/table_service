@@ -7,6 +7,70 @@ from .decorator import require_info_login, require_sid
 
 api = web.Application()
 
+
+async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
+    """
+    优先从信息门户获取，信息门户失败再从缓存课表
+    :return:
+    """
+    # 从信息门户获取
+    tables = await get_table(s, sid, ip, xnm, xqm)
+    # 从信息门户获取成功
+    if tables:
+        for index, item in enumerate(tables):
+            tables[index]['id'] = str(index+1) # 分配id
+            tables[index]['color'] = index-4*(index//4) # 分配color
+        # 写入mongo
+        filter_ = {'sid':sid}
+        replace_ = {'sid':sid, 'table':tables}
+        ## await tabledb.tables.insert_one({'sid': sid, 'table': tables})
+        await tabledb.tables.find_one_and_replace(filter_,replace_,upsert=True)
+    # 信息门户获取失败
+    else:
+        # 从缓存中获取
+        document = await tabledb.tables.find_one({'sid': sid})
+        # 缓存中获取成功
+        if document:
+            tables = document['table']
+        # 缓存获取失败
+        else:
+            tables = []
+
+    return tables
+
+
+async def get_table_from_cache(tabledb,s, sid, ip, xnm, xqm):
+    """
+    优选从缓存中获取，缓存失败再从信息门户获取
+    :param tabledb:
+    :return:
+    """
+    # 缓存从查找
+    document = await tabledb.tables.find_one({'sid': sid})
+    # 缓存中获取成功
+    if document:
+        tables = document['table']
+    # 缓存中获取失败
+    else:
+        # 从信息门户中获取
+        tables = await get_table(s, sid, ip, xnm, xqm)
+        # 信息门户中获取成功
+        if tables:
+            for index, item in enumerate(tables):
+                tables[index]['id'] = str(index + 1)  # 分配id
+                tables[index]['color'] = index - 4 * (index // 4)  # 分配color
+                # 写入mongo
+            #await tabledb.tables.insert_one({'sid': sid, 'table': tables})
+            filter_ = {'sid':sid}
+            replace_ = {'sid':sid, 'table':tables}
+            ## await tabledb.tables.insert_one({'sid': sid, 'table': tables})
+            await tabledb.tables.find_one_and_replace(filter_,replace_,upsert=True)
+        # 信息门户获取失败
+        else:
+            tables = []
+    return tables
+
+
 # 课程id对于每个用户不重复即可
 @require_info_login # 避免伪造查询请求
 async def get_table_api(request, s, sid, ip):
@@ -15,6 +79,9 @@ async def get_table_api(request, s, sid, ip):
     """
     xnm = os.getenv('XNM') or 2018
     xqm = os.getenv('XQM') or 3
+
+    # 是否处于改选时期
+    table_change = os.getenv('ON_CHANGE') or True
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     document = await tabledb.tables.find_one({'sid': sid})
@@ -32,6 +99,7 @@ async def get_table_api(request, s, sid, ip):
                 item['day'] = day_
             usertables.append(item)
 
+    """
     tables = []
     if not document:
         # 用户第一次请求, 爬取信息门户课表并写入数据库
@@ -46,6 +114,17 @@ async def get_table_api(request, s, sid, ip):
             return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
     else :
         tables = document['table']
+
+    """
+
+    # 处于改选时期，从信息门户获取
+    if table_change:
+        tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
+    else:
+        tables = await get_table_from_cache(tabledb,s, sid, ip, xnm, xqm)
+
+    if len(tables) == 0:
+        return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
 
     szkcs = []
 
