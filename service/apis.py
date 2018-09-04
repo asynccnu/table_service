@@ -80,7 +80,7 @@ async def get_table_api(request, s, sid, ip):
     xnm = os.getenv('XNM') or 2018
     xqm = os.getenv('XQM') or 3
     # 是否处于改选时期
-    table_change = os.getenv('ON_CHANGE') or True
+    table_change = os.getenv('ON_CHANGE') or "on"
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     document = await tabledb.tables.find_one({'sid': sid})
@@ -118,7 +118,7 @@ async def get_table_api(request, s, sid, ip):
     """
 
     # 处于改选时期，从信息门户获取
-    if table_change:
+    if table_change == "on" :
         tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
     else:
         tables = await get_table_from_cache(tabledb,s, sid, ip, xnm, xqm)
