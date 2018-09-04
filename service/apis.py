@@ -99,23 +99,6 @@ async def get_table_api(request, s, sid, ip):
             usertables.append(item)
 
 
-    """
-    tables = []
-    if not document:
-        # 用户第一次请求, 爬取信息门户课表并写入数据库
-        tables = await get_table(s, sid, ip, xnm, xqm)
-        if tables:
-            for index, item in enumerate(tables):
-                tables[index]['id'] = str(index+1) # 分配id
-                tables[index]['color'] = index-4*(index//4) # 分配color
-            await tabledb.tables.insert_one({'sid': sid, 'table': tables})
-            #return web.json_response(tables+usertables)
-        else :
-            return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
-    else :
-        tables = document['table']
-
-    """
 
     # 处于改选时期，从信息门户获取
     if table_change == "on" :
