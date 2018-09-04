@@ -79,7 +79,6 @@ async def get_table_api(request, s, sid, ip):
     """
     xnm = os.getenv('XNM') or 2018
     xqm = os.getenv('XQM') or 3
-
     # 是否处于改选时期
     table_change = os.getenv('ON_CHANGE') or "on"
     tabledb = request.app['tabledb']
@@ -98,6 +97,7 @@ async def get_table_api(request, s, sid, ip):
                 day_ = weekday[day_]
                 item['day'] = day_
             usertables.append(item)
+
 
     """
     tables = []
