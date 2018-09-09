@@ -52,7 +52,6 @@ async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
         else:
             tables = []
 
-    tables = get_unique(tables)
     return tables
 
 
@@ -86,7 +85,6 @@ async def get_table_from_cache(tabledb,s, sid, ip, xnm, xqm):
         else:
             tables = []
 
-    tables = get_unique(tables)
     return tables
 
 
@@ -159,8 +157,8 @@ async def get_table_api(request, s, sid, ip):
     else :
         szkcs = szkcdoc['table']
     """
-
-    return web.json_response(tables+usertables+szkcs)
+    restable = get_unique(tables+usertables+szkcs)
+    return web.json_response(restable)
 
 
 @require_sid
