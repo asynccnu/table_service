@@ -8,6 +8,22 @@ from .decorator import require_info_login, require_sid
 api = web.Application()
 
 
+def get_unique(tables):
+    """
+    根据ID将课表去重，课表不知道为什么会有重复。
+    :param tables:
+    :return:
+    """
+    IDset = []
+    unique_table = []
+    for each in  tables:
+        id = each['id']
+        if id not in IDset:
+            IDset.append(id)
+            unique_table.append(each)
+    return unique_table
+
+
 async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
     """
     优先从信息门户获取，信息门户失败再从缓存课表
@@ -36,6 +52,7 @@ async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
         else:
             tables = []
 
+    tables = get_unique(tables)
     return tables
 
 
@@ -68,6 +85,8 @@ async def get_table_from_cache(tabledb,s, sid, ip, xnm, xqm):
         # 信息门户获取失败
         else:
             tables = []
+
+    tables = get_unique(tables)
     return tables
 
 
