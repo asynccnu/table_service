@@ -13,6 +13,8 @@
 	ADMIN_PWD=szkc admin password 
 	TABLEDB=tabledb     // tabledb名字
 	USERDB=userdb       // userdb名字
+	ON_CHANGE=on or off //  是否处于改选期间
+	ON_SZKC=on or off   //  是否获取素质课
 
 ## 部署
 
