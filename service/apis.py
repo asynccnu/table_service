@@ -88,6 +88,44 @@ async def get_table_from_cache(tabledb,s, sid, ip, xnm, xqm):
     return tables
 
 
+async def get_szkc(xnm,xqm,sid,tabledb,userdb,tables):
+    """
+    获取素质课
+    :return:
+    """
+    document = await tabledb.tables.find_one({'sid': sid})
+    userdoc = await userdb.users.find_one({'sid': sid})
+    szkcdoc = await tabledb.szkcs.find_one({'sid':sid})
+    if not szkcdoc or not szkcdoc.get('table'):
+        # 用户第一次请求，爬取素质课，并写入数据库
+        # 找出课表中的最大id，防止ID重复
+        user_table = []
+        table_table = []
+        # 若不为第一次请求则可以从document中拿到，但是若是第一次请求
+        # document是没有重新请求新的，故需要从tables中获取
+        if document:
+            table_table = document['table']
+        else:
+            table_table = tables
+        if userdoc:
+            user_table = userdoc['table']
+
+        tables_ = table_table + user_table
+        item_ids = [int(item['id']) for item in tables_]
+        max_id = max(item_ids or [1])
+
+        szkcs = await get_szkc_table(xnm, xqm, sid)
+        for index, item in enumerate(szkcs):
+            szkcs[index]['id'] = str(index + 1 + max_id)  # 要保证不重复
+            szkcs[index]['color'] = index - 4 * (index // 4)
+        filter_ = {'sid' : sid}
+        replace_ = {'sid' : sid, 'table' : szkcs}
+        await tabledb.szkcs.find_one_and_replace(filter_,replace_,upsert=True)
+    else:
+        szkcs = szkcdoc['table']
+
+    return szkcs
+
 # 课程id对于每个用户不重复即可
 @require_info_login # 避免伪造查询请求
 async def get_table_api(request, s, sid, ip):
@@ -98,6 +136,8 @@ async def get_table_api(request, s, sid, ip):
     xqm = os.getenv('XQM') or 3
     # 是否处于改选时期
     table_change = os.getenv('ON_CHANGE') or "on"
+    # 是否要返回素质课
+    on_szkc = os.getenv('ON_SZKC') or "off"
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
     document = await tabledb.tables.find_one({'sid': sid})
@@ -118,7 +158,7 @@ async def get_table_api(request, s, sid, ip):
 
 
     # 处于改选时期，从信息门户获取
-    if table_change == "on" :
+    if table_change == "on":
         tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
     else:
         tables = await get_table_from_cache(tabledb,s, sid, ip, xnm, xqm)
@@ -128,35 +168,10 @@ async def get_table_api(request, s, sid, ip):
 
     szkcs = []
 
-    # 素质课网站挂了，所以先把素质课的spider关了
-    """
-    if not szkcdoc :
-        # 用户第一次请求，爬取素质课，并写入数据库
-        # 找出课表中的最大id，防止ID重复
-        user_table = []
-        table_table = []
-        # 若不为第一次请求则可以从document中拿到，但是若是第一次请求
-        # document是没有重新请求新的，故需要从tables中获取
-        if document:
-            table_table = document['table']
-        else:
-            table_table = tables
-        if userdoc:
-            user_table = userdoc['table']
+    if on_szkc == "on":
+        szkcs = await get_szkc(xnm,xqm,sid,tabledb,userdb,tables)
 
-        tables_ = table_table + user_table
-        item_ids = [int(item['id']) for item in tables_]
-        max_id = max(item_ids or [1])
 
-        szkcs = await get_szkc_table(xnm,xqm,sid)
-        #if szkcs :
-        for index, item in enumerate(szkcs) :
-            szkcs[index]['id'] = str(index+1+max_id)  # 要保证不重复
-            szkcs[index]['color'] = index-4*(index//4)
-        await tabledb.szkcs.insert_one({'sid':sid,'table':szkcs})
-    else :
-        szkcs = szkcdoc['table']
-    """
     restable = get_unique(tables+usertables+szkcs)
     return web.json_response(restable)
 
