@@ -4,12 +4,12 @@ table_api:
         - container.env
     command: gunicorn wsgi:app -k aiohttp.worker.GunicornWebWorker -b 0.0.0.0:8080 --log-level DEBUG
     external_links:
-        - test_mongo:mongo 
+        - test_mongo3:mongo 
     ports:
         - "5588:8080"
 
-test-mongo:
+test_mongo3:
     image: mongo
     ports:
         - "27017:27017"
-    container_name: "test_mongo"
+    container_name: "test_mongo3"
