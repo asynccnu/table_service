@@ -24,6 +24,7 @@ def get_unique(tables):
     return unique_table
 
 
+
 async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
     """
     优先从信息门户获取，信息门户失败再从缓存课表
@@ -62,6 +63,48 @@ async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
     return tablesret
 
 
+@require_sid
+async def get_table_from_cache(request, sid):
+    on_szkc = os.getenv('ON_SZKC') or "off"
+    tabledb = request.app['tabledb']
+    userdb = request.app['userdb']
+    userdoc = await userdb.users.find_one({'sid': sid})
+    szkcdoc = await tabledb.szkcs.find_one({'sid':sid})
+
+    xnm = os.getenv('XNM') or 2018
+    xqm = os.getenv('XQM') or 3
+    filter_ = {'sid':sid}
+    tablesdoc = await tabledb.tables.find_one(filter_)
+    tables = tablesdoc['table']
+    
+    if tables:
+        # 用户自定义课程 
+        if userdoc:                                                          # 将 1，2，3，格式的数据改成星期一，星期二
+            usertables_ = userdoc['table']
+            weekday = {'1': '星期一', '2': '星期二', '3': '星期三', '4': '星期四', '5': '星期五', '6': '星期六', '7': '星期日'}
+            for item in usertables_ :
+                day_ = item['day']
+                if weekday.get(day_) is not None:
+                    day_ = weekday[day_]
+                    item['day'] = day_
+                usertables.append(item)
+        else:
+            usertables = []
+        
+        # 素质课 
+        szkcs = []
+        try:
+            if on_szkc == "on":
+                szkcs = await get_szkc(xnm,xqm,sid,tabledb,userdb,tables)
+        except:
+            pass
+        
+        restable = get_unique(tables+usertables+szkcs)
+        
+        return web.json_response(restable)
+    else:
+        return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
+
 # 课程id对于每个用户不重复即可
 @require_info_login # 避免伪造查询请求
 async def get_table_api(request, s, sid, ip):
@@ -76,7 +119,6 @@ async def get_table_api(request, s, sid, ip):
     on_szkc = os.getenv('ON_SZKC') or "off"
     tabledb = request.app['tabledb']
     userdb = request.app['userdb']
-    document = await tabledb.tables.find_one({'sid': sid})
     userdoc = await userdb.users.find_one({'sid': sid})
     szkcdoc = await tabledb.szkcs.find_one({'sid':sid})
     usertables = []
@@ -96,7 +138,7 @@ async def get_table_api(request, s, sid, ip):
     tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
 
     if len(tables) == 0:
-        return web.Response(body=b'{"error": "null111"}', content_type='application/json', status=500)
+        return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
 
     szkcs = []
 
@@ -105,43 +147,6 @@ async def get_table_api(request, s, sid, ip):
 
     restable = get_unique(tables+usertables+szkcs)
     return web.json_response(restable)
-
-async def get_table_from_cache(tabledb,s, sid, ip, xnm, xqm):
-    """
-    *****废弃*****
-    *****废弃*****
-    *****废弃*****
-    *****废弃*****
-    *****废弃*****
-    优选从缓存中获取，缓存失败再从信息门户获取
-    :param tabledb:
-    :return:
-    """
-    # 缓存从查找
-    document = await tabledb.tables.find_one({'sid': sid})
-    # 缓存中获取成功
-    if document:
-        tables = document['table']
-    # 缓存中获取失败
-    else:
-        # 从信息门户中获取
-        tables = await get_table(s, sid, ip, xnm, xqm)
-        # 信息门户中获取成功
-        if tables:
-            for index, item in enumerate(tables):
-                tables[index]['id'] = str(index + 1)  # 分配id
-                tables[index]['color'] = index - 4 * (index // 4)  # 分配color
-                # 写入mongo
-            #await tabledb.tables.insert_one({'sid': sid, 'table': tables})
-            filter_ = {'sid':sid}
-            replace_ = {'sid':sid, 'table':tables}
-            ## await tabledb.tables.insert_one({'sid': sid, 'table': tables})
-            await tabledb.tables.find_one_and_replace(filter_,replace_,upsert=True)
-        # 信息门户获取失败
-        else:
-            tables = []
-
-    return tables
 
 
 async def get_szkc(xnm,xqm,sid,tabledb,userdb,tables):
@@ -327,6 +332,7 @@ async def get_table_api_tmp(request):
 
 
 api.router.add_route('GET', '/table/', get_table_api, name='get_table_api')
+api.router.add_route('GET', '/table/cache/', get_table_from_cache, name='get_table_cache_api')
 api.router.add_route('POST', '/tmp/table/', get_table_api_tmp, name='get_table_api_tmp')
 api.router.add_route('POST', '/table/', add_table_api, name='add_table_api')
 api.router.add_route('DELETE', '/table/{id}/', del_table_api, name='del_table_api')
