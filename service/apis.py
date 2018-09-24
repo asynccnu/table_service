@@ -62,7 +62,9 @@ async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
             tablesret = []
     return tablesret
 
-
+# 本API仅给ios端使用
+# 使用sid 获取缓存的数据
+# 因为iOS是直接从学校爬的
 @require_sid
 async def get_table_from_cache(request, sid):
     on_szkc = os.getenv('ON_SZKC') or "off"
@@ -80,14 +82,13 @@ async def get_table_from_cache(request, sid):
     if tables:
         # 用户自定义课程 
         if userdoc:                                                          # 将 1，2，3，格式的数据改成星期一，星期二
-            usertables_ = userdoc['table']
+            usertables = userdoc['table']
             weekday = {'1': '星期一', '2': '星期二', '3': '星期三', '4': '星期四', '5': '星期五', '6': '星期六', '7': '星期日'}
-            for item in usertables_ :
+            for item in usertables:
                 day_ = item['day']
                 if weekday.get(day_) is not None:
                     day_ = weekday[day_]
                     item['day'] = day_
-                usertables.append(item)
         else:
             usertables = []
         
@@ -98,9 +99,7 @@ async def get_table_from_cache(request, sid):
                 szkcs = await get_szkc(xnm,xqm,sid,tabledb,userdb,tables)
         except:
             pass
-        
         restable = get_unique(tables+usertables+szkcs)
-        
         return web.json_response(restable)
     else:
         return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
@@ -190,7 +189,7 @@ async def get_szkc(xnm,xqm,sid,tabledb,userdb,tables):
 
 
 @require_sid
-async def add_table_api(request, sid, ip):
+async def add_table_api(request, sid):
     """
     添加课程API(添加用户自定义课程)
     """
