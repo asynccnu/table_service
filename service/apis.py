@@ -62,9 +62,9 @@ async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
             tablesret = []
     return tablesret
 
-# 本API仅给ios端使用
-# 使用sid 获取缓存的数据
-# 因为iOS是直接从学校爬的
+# 客户端兜底 API
+# 使用 sid，获取缓存的数据
+# 如果无数据，说明客户端兜底失败，返回 500
 @require_sid
 async def get_table_from_cache(request, sid):
     on_szkc = os.getenv('ON_SZKC') or "off"
@@ -112,8 +112,6 @@ async def get_table_api(request, s, sid, ip):
     """
     xnm = os.getenv('XNM') or 2018
     xqm = os.getenv('XQM') or 3
-    # 是否处于改选时期
-    table_change = os.getenv('ON_CHANGE') or "on"
     # 是否要返回素质课
     on_szkc = os.getenv('ON_SZKC') or "off"
     tabledb = request.app['tabledb']
@@ -132,8 +130,7 @@ async def get_table_api(request, s, sid, ip):
                 item['day'] = day_
             usertables.append(item)
 
-    # 只使用get_table_from_ccnu 函数
-    # 在其内处理缓存
+    # get_table_from_ccnu 函数是课表请求+缓存逻辑的入口
     tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
 
     if len(tables) == 0:
@@ -308,7 +305,7 @@ async def update_table_api(request, s, sid, ip):
         return Response(body=b'{}', content_type='application/json', status=200)
     return Response(body=b'{}', content_type='application/json', status=404)
 
-
+# 历史接口，待匣子 iOS 二版稳定后可以下线
 async def get_table_api_tmp(request):
     """
     课表查询API
