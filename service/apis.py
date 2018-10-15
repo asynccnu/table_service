@@ -215,8 +215,8 @@ async def add_table_api(request, sid):
         await userdb['users'].insert_one({'sid': sid, 'table': user_table})
     return web.json_response({'id': max_id+1})
 
-@require_info_login
-async def del_table_api(request,s, sid, ip):
+@require_sid
+async def del_table_api(request, sid):
     """
     删除课程API/(可以)删除信息门户课程
     """
