@@ -1,7 +1,7 @@
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 
-MONGOHOST = os.getenv('MONGOHOST') or 'localhost'
+MONGOHOST = os.getenv('MONGOHOST') or 'test_mongo3'
 MONGOPORT = int(os.getenv('MONGOPORT') or '27017')
 TABLEDB = os.getenv('TABLEDB') or 'tabledb'
 USERDB = os.getenv('USERDB') or 'userdb'

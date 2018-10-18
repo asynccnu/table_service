@@ -35,5 +35,5 @@ def require_sid(f):
         if not sid:
             err_msg = "missing Sid: %s" % str(sid)
             return json_response(data={"err_msg": err_msg}, status=401)
-        return await f(request, sid, None, *args, **kwargs)
+        return await f(request, sid,  *args, **kwargs)
     return decorator

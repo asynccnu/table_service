@@ -67,56 +67,14 @@ paths:
         401:
           description: 无学号Header
         
-  /api/table/{id}/:
-    put:
-      summary: 编辑课表
-      parameters: 
-      - in: header
-        name: Bigipserverpool
-        type: string
-        description: 登录教务处后Cookie中bigserverpool
-      - in: header
-        name: sid
-        type: integer
-        description: 学号
-      - in: header
-        name: Jsessionid
-        type: string
-        description: 登录教务处后Cookie中Jsessionid
-      - in: header
-        name: Authorization
-        type: string
-        description: Basic Base64(sid:pwd)
-      - in: path
-        name: id
-        type: integer
-        description: 课程id
-        required: true
-      - in: body
-        name: body
-        schema:
-          type: object
-          $ref: '#/definitions/Course'
   
     delete:
       summary: 删除课程
       parameters: 
       - in: header
-        name: Bigipserverpool
-        type: string
-        description: 登录教务处后Cookie中bigserverpool
-      - in: header
         name: sid
         type: integer
         description: 学号
-      - in: header
-        name: Jsessionid
-        type: string
-        description: 登录教务处后Cookie中Jsessionid
-      - in: header
-        name: Authorization
-        type: string
-        description: Basic Base64(sid:pwd)
       - in: path
         name: id
         type: integer
@@ -132,8 +90,23 @@ paths:
           description: 未授权
         404:
           description: 待删除课程不存在
-    
-
+          
+  /api/table/cache/:
+    get:
+      summary: 获缓存取课程表
+      parameters: 
+      - in: header
+        name: sid
+        type: integer
+        description: 学号
+      
+      responses:
+        200:
+          description: ok
+          schema:
+            type: object
+            $ref: '#/definitions/Courses'
+            
 definitions:
   Course:
     type: object
@@ -169,4 +142,4 @@ definitions:
     type: array
     items:
       $ref: '#/definitions/Course'
-        
+

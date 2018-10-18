@@ -13,7 +13,6 @@
 	ADMIN_PWD=szkc admin password 
 	TABLEDB=tabledb     // tabledb名字
 	USERDB=userdb       // userdb名字
-	ON_CHANGE=on or off //  是否处于改选期间
 	ON_SZKC=on or off   //  是否获取素质课
 
 ## 部署
@@ -29,3 +28,9 @@ docker-compose ps
 
 + 2017年4月29日: 拖了2个月了...ㄟ( ▔, ▔ )ㄏ
 + 2018年3月20日: 在课表中增加了素质课
++ 2018年10月3日: 配合匣子 iOS 2.0 对课表服务进行完善
+
+## Todo
+
++ Unit Test
++ More Documentation
