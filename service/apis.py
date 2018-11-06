@@ -33,6 +33,7 @@ async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
     tables = await get_table(s, sid, ip, xnm, xqm)
     tablesret = None
     # 从信息门户获取成功
+    print("table" + str(tables))
     if tables:
         filter_ = {'sid':sid}
         val = await tabledb.tables.find_one(filter_)
@@ -115,6 +116,48 @@ async def get_table_from_cache(request, sid):
     else:
         return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
 
+
+async def get_table_from_cache2(request, sid):
+    on_szkc = os.getenv('ON_SZKC') or "off"
+    tabledb = request.app['tabledb']
+    userdb = request.app['userdb']
+    userdoc = await userdb.users.find_one({'sid': sid})
+    szkcdoc = await tabledb.szkcs.find_one({'sid':sid})
+
+    xnm = os.getenv('XNM') or 2018
+    xqm = os.getenv('XQM') or 3
+    filter_ = {'sid':sid}
+    tablesdoc = await tabledb.tables.find_one(filter_)
+    tables = tablesdoc['table']
+    
+    if tables:
+        # 用户自定义课程 
+        if userdoc:                                                          # 将 1，2，3，格式的数据改成星期一，星期二
+            usertables = userdoc['table']
+            weekday = {'1': '星期一', '2': '星期二', '3': '星期三', '4': '星期四', '5': '星期五', '6': '星期六', '7': '星期日'}
+            for item in usertables:
+                day_ = item['day']
+                if weekday.get(day_) is not None:
+                    day_ = weekday[day_]
+                    item['day'] = day_
+        else:
+            usertables = []
+        
+        # 素质课 
+        szkcs = []
+        try:
+            if on_szkc == "on":
+                szkcs = await get_szkc(xnm,xqm,sid,tabledb,userdb,tables)
+        except:
+            szkcs = []
+            pass
+        restable = get_unique(tables+usertables+szkcs)
+        return web.json_response(restable)
+    else:
+        return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
+
+
+
 # 课程id对于每个用户不重复即可
 @require_info_login # 避免伪造查询请求
 async def get_table_api(request, s, sid, ip):
@@ -142,7 +185,9 @@ async def get_table_api(request, s, sid, ip):
             usertables.append(item)
 
     # get_table_from_ccnu 函数是课表请求+缓存逻辑的入口
-    tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
+    tables = await get_table_from_cache2(request, sid)
+    return tables
+    # tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
 
     # 教务处获取信息失败，且未能从缓存获取信息时，返回500
     if len(tables) == 0:
