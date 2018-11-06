@@ -24,7 +24,6 @@ def get_unique(tables):
     return unique_table
 
 
-
 async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
     """
     优先从信息门户获取，信息门户失败再从缓存课表
@@ -41,6 +40,9 @@ async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
             tables[index]['id'] = str(index+1) # 分配id
             tables[index]['color'] = index-4*(index//4) # 分配color
         replace_ = {'sid':sid, 'table':tables}
+        
+        # log
+        api['logger'].info("获取教务处信息成功")
 
         # 缓存命中, 更新mongo
         if val:
@@ -57,9 +59,17 @@ async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
         # 缓存中获取成功
         if document:
             tablesret = document['table']
+
+            # log
+            api['logger'].info("获取教务处信息失败，缓存获取成功")
+
         # 缓存获取失败
         else:
             tablesret = []
+
+            #log
+            api['logger'].error("获取教务处信息失败，缓存获取失败!")
+
     return tablesret
 
 # 客户端兜底 API
@@ -98,6 +108,7 @@ async def get_table_from_cache(request, sid):
             if on_szkc == "on":
                 szkcs = await get_szkc(xnm,xqm,sid,tabledb,userdb,tables)
         except:
+            szkcs = []
             pass
         restable = get_unique(tables+usertables+szkcs)
         return web.json_response(restable)
@@ -133,16 +144,23 @@ async def get_table_api(request, s, sid, ip):
     # get_table_from_ccnu 函数是课表请求+缓存逻辑的入口
     tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
 
+    # 教务处获取信息失败，且未能从缓存获取信息时，返回500
     if len(tables) == 0:
         return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
 
     szkcs = []
 
-    if on_szkc == "on":
-        szkcs = await get_szkc(xnm,xqm,sid,tabledb,userdb,tables)
+    # 素质课程请求失败时返回空
+    try:
+        if on_szkc == "on":
+            szkcs = await get_szkc(xnm,xqm,sid,tabledb,userdb,tables)
+    except Exception as e:
+        api['logger'].exception("素质课程获取失败. " + repr(e))
+        szkcs = []
 
     restable = get_unique(tables+usertables+szkcs)
     return web.json_response(restable)
+
 
 
 async def get_szkc(xnm,xqm,sid,tabledb,userdb,tables):

@@ -1,8 +1,11 @@
 import json
 import aiohttp
+from .logger.logger import Logger
+
+logger = Logger.makelogger("|spider logger|")
 
 test_url = "http://portal.ccnu.edu.cn/index_jg.jsp"
-table_index_url = "http://122.204.187.6/kbcx/xskbcx_cxXsKb.html?gnmkdmKey=N253508&sessionUserKey=%s" # sqlmap
+table_index_url = "http://122.204.187.6/kbcx/|delete|xskbcx_cxXsKb.html?gnmkdmKey=N253508&sessionUserKey=%s" # sqlmap
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -79,5 +82,5 @@ async def get_table(s, sid, ip, xnm, xqm):
                     kcList.append(_item_dict)
                 return(kcList)
             except Exception as e:
-                print("Spider Error:", str(e))
+                logger.exception(repr(e))
                 return None
