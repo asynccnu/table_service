@@ -27,37 +27,8 @@ async def get_table(s, sid, ip, xnm, xqm):
                 weeks_list = []
                 for item in kbList:
                     _weeks = item.get('zcd')
-                    if '(' in _weeks:
-                        weeks = _weeks.split('(')
-                        time = weeks[0]
-                        mode = weeks[-1]
-                        if ',' in time:
-                            times = time.split(',')
-                            weeks_list.append(times[0][:-1])
-                            time = times[1]
-                        _time = time.split('-')
-                        _start = int(_time[0])
-                        _last = int(_time[-1][:-1])
-                        if mode: # 奇偶
-                            weeks_list = range(_start, _last+1, 2)
-                    elif ',' in _weeks:
-                        weeks = _weeks.split(',')
-                        weeks_list = []
-                        for week in weeks:
-                            if '-' in week:
-                                _start = int(week.split('-')[0])
-                                _last = int(week.split('-')[1][:-1])
-                                _weeks_list = range(_start, _last+1)
-                                weeks_list += _weeks_list
-                            else:
-                                weeks_list.append(week[:-1])
-                    elif '-' in _weeks:
-                        weeks = _weeks.split('-')
-                        _start = int(weeks[0])
-                        _last = int(weeks[-1][:-1])
-                        weeks_list = range(_start, _last+1)
-                    else:
-                        weeks_list = [int(_weeks[:-1])]
+                    weeks_list = tmp_get_week(_weeks)
+                    #print(_weeks,weeks_list)
                     str_weeks_list = [str(i) for i in weeks_list]
                     _class = item.get('jcs').split('-')
                     s_class = int(_class[0])
@@ -84,3 +55,34 @@ async def get_table(s, sid, ip, xnm, xqm):
             except Exception as e:
                 logger.exception(repr(e))
                 return None
+
+
+def get_from_one_item(_weeks):
+    week_list = []
+    if '(' in _weeks:
+        weeks = _weeks.split('(')
+        time = weeks[0]
+        mode = weeks[-1]
+        _time = time.split('-')
+        _start = int(_time[0])
+        _last = int(_time[-1][:-1])
+        if mode:  # 奇偶
+            week_list = range(_start, _last + 1, 2)
+    elif '-' in _weeks:
+        weeks = _weeks.split('-')
+        _start = int(weeks[0])
+        _last = int(weeks[-1][:-1])
+        week_list = range(_start, _last + 1)
+    else:
+        week_list = [int(_weeks[:-1])]
+
+    return week_list
+
+
+def tmp_get_week(_weeks):
+    each_weeks = _weeks.split(',')
+    week_lists = []
+    for each in each_weeks:
+        each_list = get_from_one_item(each)
+        week_lists += each_list
+    return week_lists
