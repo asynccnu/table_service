@@ -10,7 +10,7 @@ USERDB = os.getenv('USERDB') or 'userdb'
 
 async def setup_db():
     # client = AsyncIOMotorClient(MONGODB_HOST, MONGODB_PORT)
-    mongo_uri = "mongodb://{}:{}@{}:{}".format(MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_HOST, MONGODB_PORT)
+    mongo_uri = "mongodb://{}:{}@{}:{}".format(MONGODB_USERNAME, MONGODB_PASSWORD, MONGOHOST, MONGOPORT)
     client = AsyncIOMotorClient(mongo_uri)
     tabledb = client[TABLEDB]  # 存储信息门户课表
     userdb = client[USERDB]    # 存储自定义课表
