@@ -84,11 +84,11 @@ async def get_table_from_cache(request, sid):
     userdoc = await userdb.users.find_one({'sid': sid})
     szkcdoc = await tabledb.szkcs.find_one({'sid':sid})
 
-    xnm = os.getenv('XNM') or 2018
+    xnm = os.getenv('XNM') or 2019
     xqm = os.getenv('XQM') or 3
     filter_ = {'sid':sid}
     tablesdoc = await tabledb.tables.find_one(filter_)
-    tables = tablesdoc['table']
+    tables = tablesdoc.get('table')
     
     if tables:
         # 用户自定义课程 
@@ -124,11 +124,11 @@ async def get_table_from_cache2(request, sid):
     userdoc = await userdb.users.find_one({'sid': sid})
     szkcdoc = await tabledb.szkcs.find_one({'sid':sid})
 
-    xnm = os.getenv('XNM') or 2018
+    xnm = os.getenv('XNM') or 2019
     xqm = os.getenv('XQM') or 3
     filter_ = {'sid':sid}
     tablesdoc = await tabledb.tables.find_one(filter_)
-    tables = tablesdoc['table']
+    tables = tablesdoc.get('table')
     
     if tables:
         # 用户自定义课程 
