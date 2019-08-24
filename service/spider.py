@@ -5,7 +5,7 @@ from .logger.logger import Logger
 logger = Logger.makelogger("|spider logger|")
 
 test_url = "http://portal.ccnu.edu.cn/index_jg.jsp"
-table_index_url = "http://122.204.187.6/kbcx/|delete|xskbcx_cxXsKb.html?gnmkdmKey=N253508&sessionUserKey=%s" # sqlmap
+table_index_url = "http://xk.ccnu.edu.cn/kbcx/xskbcx_cxXsKb.html?gnmkdm=N253508&sessionUserKey=%s" # sqlmap
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -20,6 +20,7 @@ async def get_table(s, sid, ip, xnm, xqm):
             cookies=s, headers=headers) as session:
         async with session.post(table_url, data=payload, timeout=5) as resp:
             try:
+                print("resp:", str(resp))
                 json_data = await resp.json()
                 # prase json_data
                 kbList = json_data.get('kbList')

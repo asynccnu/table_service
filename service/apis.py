@@ -31,6 +31,7 @@ async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
     tablesret: 成功返回课表，失败返回[], 由API函数进一步处理
     """
     tables = await get_table(s, sid, ip, xnm, xqm)
+    api['logger'].info("tables:" + str(tables))
     tablesret = None
     # 从信息门户获取成功
     print("table" + str(tables))
@@ -189,10 +190,7 @@ async def get_table_api(request, s, sid, ip):
                 item['day'] = day_
             usertables.append(item)
 
-    # get_table_from_ccnu 函数是课表请求+缓存逻辑的入口
-    tables = await get_table_from_cache2(request, sid)
-    return tables
-    # tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
+    tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
 
     # 教务处获取信息失败，且未能从缓存获取信息时，返回500
     if len(tables) == 0:
