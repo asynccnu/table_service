@@ -34,7 +34,6 @@ async def get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm):
     api['logger'].info("tables:" + str(tables))
     tablesret = None
     # 从信息门户获取成功
-    print("table" + str(tables))
     if tables:
         filter_ = {'sid':sid}
         val = await tabledb.tables.find_one(filter_)
