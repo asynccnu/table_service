@@ -16,10 +16,10 @@ async def get_table(s, sid, ip, xnm, xqm):
     table_url = table_index_url % sid
     payload = {'xnm': xnm, 'xqm': xqm}
     weekday = {'1':'星期一','2':'星期二','3':'星期三','4':'星期四','5':'星期五','6':'星期六','7':'星期日'}
-    async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True),
-            cookies=s, headers=headers) as session:
-        async with session.post(table_url, data=payload, timeout=5) as resp:
-            try:
+    try:
+        async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True),
+                cookies=s, headers=headers) as session:
+            async with session.post(table_url, data=payload, timeout=3) as resp:
                 print("resp:", str(resp))
                 json_data = await resp.json()
                 # prase json_data
@@ -53,9 +53,9 @@ async def get_table(s, sid, ip, xnm, xqm):
                     }
                     kcList.append(_item_dict)
                 return(kcList)
-            except Exception as e:
-                logger.exception(repr(e))
-                return None
+    except Exception as e:
+        logger.exception(repr(e))
+        return None
 
 
 def get_from_one_item(_weeks):

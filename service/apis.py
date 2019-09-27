@@ -170,7 +170,7 @@ async def get_table_api(request, s, sid, ip):
     """
     课表查询API
     """
-    xnm = os.getenv('XNM') or 2018
+    xnm = os.getenv('XNM') or 2019
     xqm = os.getenv('XQM') or 3
     # 是否要返回素质课
     on_szkc = os.getenv('ON_SZKC') or "off"
@@ -191,11 +191,9 @@ async def get_table_api(request, s, sid, ip):
             usertables.append(item)
 
     tables = await get_table_from_ccnu(tabledb,s, sid, ip, xnm, xqm)
+    
 
     # 教务处获取信息失败，且未能从缓存获取信息时，返回500
-    if len(tables) == 0:
-        tables = await get_table_from_cache2(request, sid)
-
     if len(tables) == 0:
         return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
 
