@@ -194,6 +194,9 @@ async def get_table_api(request, s, sid, ip):
 
     # 教务处获取信息失败，且未能从缓存获取信息时，返回500
     if len(tables) == 0:
+        tables = await get_table_from_cache2(request, sid)
+
+    if len(tables) == 0:
         return web.Response(body=b'{"error": "null"}', content_type='application/json', status=500)
 
     szkcs = []
