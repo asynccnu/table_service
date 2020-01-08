@@ -13,6 +13,10 @@ headers = {
 }
 
 async def get_table(s, sid, ip, xnm, xqm):
+#    s['UM_distinctid'] = s.get('BIGipServerpool_jwc_xk')
+#    s.pop('BIGipServerpool_jwc_xk')
+    logger.info("Cookie:"+str(s))
+    
     table_url = table_index_url % sid
     payload = {'xnm': xnm, 'xqm': xqm}
     weekday = {'1':'星期一','2':'星期二','3':'星期三','4':'星期四','5':'星期五','6':'星期六','7':'星期日'}
@@ -20,7 +24,9 @@ async def get_table(s, sid, ip, xnm, xqm):
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True),
                 cookies=s, headers=headers) as session:
             async with session.post(table_url, data=payload, timeout=3) as resp:
+                print()
                 print("resp:", str(resp))
+                print()
                 json_data = await resp.json()
                 # prase json_data
                 kbList = json_data.get('kbList')
