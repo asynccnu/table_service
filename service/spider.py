@@ -24,9 +24,8 @@ async def get_table(s, sid, ip, xnm, xqm):
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True),
                 cookies=s, headers=headers) as session:
             async with session.post(table_url, data=payload, timeout=3) as resp:
-                print()
-                print("resp:", str(resp))
-                print()
+                logger.info("RespInfo:" + str(await resp.text()))
+
                 json_data = await resp.json()
                 # prase json_data
                 kbList = json_data.get('kbList')
