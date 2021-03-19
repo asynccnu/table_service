@@ -10,7 +10,7 @@ chardet==2.3.0
 cryptography
 gunicorn==19.6.0
 idna==2.2
-Jinja2==2.9.5
+Jinja2==2.11.3
 MarkupSafe==0.23
 motor==1.1
 multidict==2.1.4
