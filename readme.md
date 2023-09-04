@@ -1,7 +1,7 @@
 # table_service
 
 > 华师匣子课表查询服务
-（应该未使用，但Description我貌似没权限改）-- TAODEI
+
 ## 环境配置(container.env)
 
     XNM=2014 // 表示2014~2015学年, 类推
