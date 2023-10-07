@@ -18,7 +18,7 @@ async def get_table(s, sid, ip, xnm, xqm):
     logger.info("Cookie:"+str(s))
     
     table_url = table_index_url % sid
-    payload = {'xnm': xnm, 'xqm': xqm}
+    payload = {'xnm': xnm, 'xqm': xqm,'kzlx':'ck','xsdm':''}
     weekday = {'1':'星期一','2':'星期二','3':'星期三','4':'星期四','5':'星期五','6':'星期六','7':'星期日'}
     try:
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True),
